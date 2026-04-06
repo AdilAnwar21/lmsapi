@@ -17,6 +17,9 @@ app.use(morgan('dev'));
 // app.use('/uploads', express.static('uploads'));
 
 
+//routes import
+const authRoutes = require('./routes/auth.routes');
+
 //setup for production
 
 const https = require('https');
@@ -37,6 +40,10 @@ setInterval(() => {
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected successfully'))
     .catch(err => console.log('MongoDB connection error:', err));
+
+
+//Routes setup
+app.use('/api/auth', authRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
