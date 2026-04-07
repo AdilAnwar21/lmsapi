@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const morgan = require('morgan');
+const { globalLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan('dev'));
+
+app.use(express.json());
+app.use('/api', globalLimiter);
 // const apiRoutes = require('./routes/api');
 // app.use('/api', apiRoutes);
 // app.use('/uploads', express.static('uploads'));
@@ -19,7 +23,7 @@ app.use(morgan('dev'));
 
 //routes import
 const authRoutes = require('./routes/auth.routes');
-
+const adminRoutes = require('./routes/admin.routes');
 //setup for production
 
 const https = require('https');
@@ -44,11 +48,27 @@ mongoose.connect(process.env.MONGODB_URI)
 
 //Routes setup
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
     res.send('Mellou Billing API is running');
 });
+
+
+
+
+// 1. Handle Unhandled Routes (404)
+const AppError = require('./utils/AppError');
+app.use((req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+// 2. The Global Error Handler (MUST BE LAST)
+const errorHandler = require('./middleware/error.middleware');
+app.use(errorHandler);
+
+
 
 // Start Server
 app.listen(PORT, () => {
