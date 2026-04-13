@@ -24,6 +24,7 @@ app.use('/api', globalLimiter);
 //routes import
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
+const adminCategoryRoutes = require('./routes/admin.category.routes');
 //setup for production
 
 const https = require('https');
@@ -49,6 +50,7 @@ mongoose.connect(process.env.MONGODB_URI)
 //Routes setup
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/categories', adminCategoryRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
