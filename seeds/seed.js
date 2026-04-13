@@ -21,6 +21,7 @@ const seedAdmin = async () => {
             password: hashedPassword,
             phone: "0000000000",
             role: "admin",
+            is_onboarded: true,
             is_two_factor_enabled: false // We will set this up via UI
         });
 

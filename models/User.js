@@ -3,7 +3,16 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true },
+  password: { 
+      type: String, 
+      // Password is only strictly required if they are a student registering themselves
+      required: function() { return this.role === 'student'; } 
+  },
+  is_onboarded: { 
+      type: Boolean, 
+      // Students are onboarded instantly. Admin/Staff must verify OTP first.
+      default: function() { return this.role === 'student'; } 
+  },
   phone: { type: String, required: true, unique: true },
   
   // Role Engine

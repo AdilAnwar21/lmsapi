@@ -3,51 +3,55 @@ const { decodeQuery } = require('../utils/encoder');
 const bcrypt = require('bcryptjs');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
+const sendEmail = require('../utils/sendEmail');
+
 
 // 1. Create Team Member (Admin/Staff)
 exports.createTeamMember = catchAsync(async (req, res, next) => {
-    console.log(req.user);
-    console.log(req.body);
-    const { name, email, password, phone, role, permissions } = req.body;
+    // Notice: We removed 'password' from req.body
+    const { name, email, phone, role, permissions } = req.body;
+    const currentUserRole = req.user.role; 
 
-    const currentUserRole = req.user.role; // From the JWT (verifyToken middleware)
-
-    // THE GUARDRAIL: Prevent Staff from creating Admins
     if (role === 'admin' && currentUserRole !== 'admin') {
-        return next(new AppError('SECURITY ALERT: Only existing Admins can create new Admin accounts.', 403));
+        return next(new AppError('SECURITY ALERT: Only Admins can create new Admins.', 403));
     }
 
-    // Ensure they are only creating valid team roles
     if (!['admin', 'staff'].includes(role)) {
         return next(new AppError('Invalid role. Must be admin or staff.', 400));
     }
 
-    // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-        return next(new AppError('Email is already in use.', 400));
+        return next(new AppError('An account with that email already exists.', 400));
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newTeamMember = await User.create({
         name,
         email,
-        password: hashedPassword,
         phone: phone || "0000000000",
         role,
-        // If they are an admin, they don't need explicit permissions. If staff, assign what was passed.
         permissions: role === 'admin' ? [] : (permissions || []),
-        is_two_factor_enabled: false // They will set this up on their first login!
+        is_two_factor_enabled: false,
+        is_onboarded: false // They must complete the OTP flow
     });
 
-    // Remove password from response
-    newTeamMember.password = undefined;
+    // Send the Welcome Email
+    const loginUrl = 'http://localhost:4200/staff/setup'; // Your Angular frontend URL
+    await sendEmail({
+        email: newTeamMember.email,
+        subject: 'Welcome to After Commerce!',
+        html: `
+            <h2>Welcome to the team, ${newTeamMember.name}!</h2>
+            <p>An administrator has created an account for you.</p>
+            <p>Please click the link below to verify your email and set up your secure password.</p>
+            <a href="${loginUrl}">Complete Account Setup</a>
+        `
+    });
 
     res.status(201).json({
         success: true,
-        message: `${role === 'admin' ? 'Admin' : 'Staff'} account created successfully.`,
-        data: newTeamMember
+        message: `${role === 'admin' ? 'Admin' : 'Staff'} account created. Invite email sent!`,
+        data: { id: newTeamMember._id, name: newTeamMember.name, email: newTeamMember.email }
     });
 });
 

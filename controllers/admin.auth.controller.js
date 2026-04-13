@@ -8,12 +8,17 @@ const qrcode = require('qrcode');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync.js');
 
+const sendEmail = require('../utils/sendEmail');
+const redisClient = require('../config/redis');
+
+
 // 1. Phase 1 Login (Email & Password)
 exports.login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-        return next(new AppError('Please provide an email and password.', 400));
+    // We only require email at first, because first-time users don't have a password yet!
+    if (!email) {
+        return next(new AppError('Please provide an email.', 400));
     }
 
     const user = await User.findOne({ email });
@@ -21,17 +26,51 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(new AppError('Invalid credentials or unauthorized access.', 401));
     }
 
+    // ==========================================
+    // 🔥 NEW: THE FIRST LOGIN INTERCEPTOR
+    // ==========================================
+    if (user.is_onboarded === false) {
+        // 1. Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // 2. Save to Redis (10 min expiry)
+        await redisClient.setEx(`otp:${email}`, 600, otp);
+
+        // 3. Send Email
+        await sendEmail({
+            email: user.email,
+            subject: 'Your Account Setup Code',
+            html: `<h2>Welcome to the team!</h2>
+                   <p>Your 6-digit setup code is: <strong>${otp}</strong></p>
+                   <p>This code will expire in 10 minutes.</p>`
+        });
+
+        // 4. Tell the Frontend to switch the UI!
+        return res.status(200).json({
+            success: true,
+            requiresSetup: true, 
+            message: 'First login detected. Verification code sent to email.'
+        });
+    }
+
+    // ==========================================
+    // 🛡️ STANDARD LOGIN (For onboarded users)
+    // ==========================================
+    if (!password) {
+        return next(new AppError('Please provide your password.', 400));
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
         return next(new AppError('Invalid credentials.', 401));
     }
 
-    // If 2FA is enabled, DO NOT send the real token. Send a temp token.
+    // If 2FA is enabled...
     if (user.is_two_factor_enabled) {
         const tempToken = jwt.sign(
             { id: user._id, role: user.role, isTemp: true },
             process.env.JWT_SECRET,
-            { expiresIn: '5m' } // Only valid for 5 minutes
+            { expiresIn: '5m' }
         );
 
         return res.status(200).json({
@@ -42,12 +81,13 @@ exports.login = catchAsync(async (req, res, next) => {
         });
     }
 
-    // If 2FA is NOT enabled (like the first time the Seed Admin logs in)
+    // Standard 7-day token issuance
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    console.log(token,'token');
+    
     res.status(200).json({
         success: true,
         requires2FA: false,
+        requiresSetup: false,
         token,
         user: { id: user._id, name: user.name, role: user.role, is_two_factor_enabled: false }
     });
@@ -137,5 +177,45 @@ exports.loginWith2FA = catchAsync(async (req, res, next) => {
         success: true,
         token: finalToken,
         user: { id: user._id, name: user.name, role: user.role }
+    });
+});
+
+
+// Add this to admin.auth.controller.js
+exports.completeSetup = catchAsync(async (req, res, next) => {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+        return next(new AppError('Please provide email, OTP, and a new password.', 400));
+    }
+
+    // 1. Retrieve OTP from Redis
+    const cachedOtp = await redisClient.get(`otp:${email}`);
+
+    if (!cachedOtp || cachedOtp !== otp) {
+        return next(new AppError('Invalid or expired verification code.', 400));
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        return next(new AppError('User not found.', 404));
+    }
+
+    // 2. Hash the new password and lock in the onboarding
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.is_onboarded = true;
+    await user.save();
+
+    // 3. Delete the OTP from Redis so it can't be used again
+    await redisClient.del(`otp:${email}`);
+
+    // 4. Generate a standard 7-day JWT so they can instantly proceed to the 2FA setup screen
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(200).json({
+        success: true,
+        message: 'Account successfully set up! Proceeding to dashboard...',
+        token,
+        user: { id: user._id, name: user.name, role: user.role, is_two_factor_enabled: false }
     });
 });
