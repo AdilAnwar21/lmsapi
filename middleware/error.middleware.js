@@ -22,7 +22,9 @@ const errorHandler = (err, req, res, next) => {
 
     // 3. CATCH MONGOOSE DUPLICATE KEY (e.g., trying to register an email that already exists)
     if (err.code === 11000) {
-        const message = `Duplicate field value entered. Please use another value.`;
+        // This extracts the exact field name that caused the duplicate error!
+        const field = Object.keys(err.keyValue)[0];
+        const message = `An account with that ${field} already exists. Please use another value.`;
         error = new AppError(message, 400);
     }
 

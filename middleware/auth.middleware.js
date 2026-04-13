@@ -12,11 +12,14 @@ exports.verifyToken = (req, res, next) => {
 
         // Verify the token using your secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        console.log(decoded);
         
         // Attach the user data to the request so the next functions can use it
         req.user = decoded;
         next();
     } catch (error) {
+        console.log(error);
         return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
     }
 };

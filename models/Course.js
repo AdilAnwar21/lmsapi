@@ -14,7 +14,17 @@ const courseSchema = new mongoose.Schema({
   // Post-Completion Logic
   post_completion_access: { type: String, enum: ['RETAIN', 'REVOKE'], default: 'RETAIN' },
   thank_you_message: { type: String }, // HTML text
-  issues_certificate: { type: Boolean, default: false }
+  issues_certificate: { type: Boolean, default: false },
+  is_certificate_enabled: {
+      type: Boolean,
+      default: true // Allows admin to turn off certificates for mini-courses
+  },
+  certificate_template_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CertificateTemplate',
+      default: null // Admin will select this from a dropdown
+  },
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Course', courseSchema);

@@ -37,3 +37,28 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
+
+
+
+const ALL_PERMISSIONS = [
+  "course:view",
+  "course:create",
+  "course:edit",
+  "course:delete",
+  "content:manage",
+  "user:view",
+  "user:edit",
+  "user:block",
+  "team:view",
+  "team:create",
+  "team:edit",
+  "finance:view",
+  "finance:payout",
+  "finance:refund",
+  "marketing:view",
+  "marketing:edit",
+  "coupon:manage",
+  "community:view",
+  "community:moderate",
+  "settings:manage"
+];
