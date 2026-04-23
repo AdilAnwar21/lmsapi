@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const courseSchema = new mongoose.Schema({
   category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
@@ -24,7 +25,18 @@ const courseSchema = new mongoose.Schema({
       ref: 'CertificateTemplate',
       default: null // Admin will select this from a dropdown
   },
+
+  
   
 }, { timestamps: true });
 
+
+courseSchema.pre('save', function(next) {
+  if (this.isModified('title')) {
+      this.slug = slugify(this.title, { lower: true, strict: true });
+  }
+  next();
+});
+
 module.exports = mongoose.model('Course', courseSchema);
+

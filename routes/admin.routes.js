@@ -13,6 +13,10 @@ router.post('/auth/login',authLimiter, adminAuthController.login);
 router.post('/auth/login/2fa',authLimiter, adminAuthController.loginWith2FA);
 
 
+router.post('/auth/logout', verifyToken, adminAuthController.logout);
+
+
+
 router.post('/auth/complete-setup', authLimiter, adminAuthController.completeSetup);
 
 // Protected Admin Routes (Requires standard token)
@@ -35,6 +39,11 @@ router.get(
     checkPermission('user:view'), 
     adminUserController.getAllUsers
 );
+
+router.get('/users/me', verifyToken, adminAuthController.getMe);
+
+
+router.get('/permissions',verifyToken,adminUserController.getAllPermissions)
 
 router.post(
     '/utils/encode', 

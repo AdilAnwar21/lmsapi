@@ -1,26 +1,38 @@
 const jwt = require('jsonwebtoken');
+const redisClient = require('../config/redis');
+const AppError = require('../utils/AppError');
 
-exports.verifyToken = (req, res, next) => {
+exports.verifyToken = async (req, res, next) => { // <-- Note the 'async'
     try {
-        // Look for the token in the headers
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+            return next(new AppError('Access denied. No token provided.', 401));
         }
 
         const token = authHeader.split(' ')[1];
 
-        // Verify the token using your secret key
+        if (!token || token === 'null' || token === 'undefined') {
+            return next(new AppError('Invalid token format.', 401));
+        }
+
+        // 🔥 NEW: Check if the token is in the Redis Blacklist
+        const isBlacklisted = await redisClient.get(`blacklist:${token}`);
+        if (isBlacklisted) {
+            return next(new AppError('Session expired. Please log in again.', 401));
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        console.log(decoded);
+        if (decoded.isTemp) {
+            return next(new AppError('Access denied. Please complete your 2FA verification first.', 403));
+        }
         
-        // Attach the user data to the request so the next functions can use it
+        // Attach the user data AND the raw token to the request
         req.user = decoded;
+        req.token = token; // We save this so the logout API can grab it easily!
         next();
     } catch (error) {
-        console.log(error);
-        return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
+        return next(error);
     }
 };
 

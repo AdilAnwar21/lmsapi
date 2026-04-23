@@ -89,7 +89,30 @@ exports.login = catchAsync(async (req, res, next) => {
         requires2FA: false,
         requiresSetup: false,
         token,
-        user: { id: user._id, name: user.name, role: user.role, is_two_factor_enabled: false }
+        // user: { id: user._id, name: user.name, role: user.role, is_two_factor_enabled: false }
+    });
+});
+
+
+
+// Get Current Logged-in User Profile
+exports.getMe = catchAsync(async (req, res, next) => {
+    // req.user.id is securely extracted from the JWT by your verifyToken middleware
+    const user = await User.findById(req.user.id)
+        .select('-password -two_factor_secret'); // Never expose secure fields
+
+    if (!user) {
+        return next(new AppError('User not found. Please log in again.', 404));
+    }
+
+    // Optional: If the user is soft-deleted or blocked, catch it here
+    if (user.is_blocked) {
+        return next(new AppError('Your account has been suspended.', 403));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: user
     });
 });
 
@@ -217,5 +240,29 @@ exports.completeSetup = catchAsync(async (req, res, next) => {
         message: 'Account successfully set up! Proceeding to dashboard...',
         token,
         user: { id: user._id, name: user.name, role: user.role, is_two_factor_enabled: false }
+    });
+});
+
+
+
+exports.logout = catchAsync(async (req, res, next) => {
+    // We grab the raw token we saved in the middleware
+    const token = req.token; 
+    const decodedUser = req.user; 
+
+    // 1. Calculate how much time is left before the token naturally expires
+    // decodedUser.exp is in seconds, Date.now() is in milliseconds
+    const currentTime = Math.floor(Date.now() / 1000); 
+    const timeRemaining = decodedUser.exp - currentTime;
+
+    // 2. If the token is already expired, we don't need to do anything
+    if (timeRemaining > 0) {
+        // 3. Add the token to the Redis Blacklist for the remaining time
+        await redisClient.setEx(`blacklist:${token}`, timeRemaining, 'true');
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'Logged out successfully.'
     });
 });

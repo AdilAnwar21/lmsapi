@@ -130,3 +130,34 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 // const encodedString = btoa(JSON.stringify(filterParams));
+
+
+const ALL_PERMISSIONS = [
+    "course:view",
+    "course:create",
+    "course:edit",
+    "course:delete",
+    "content:manage",
+    "user:view",
+    "user:edit",
+    "user:block",
+    "team:view",
+    "team:create",
+    "team:edit",
+    "finance:view",
+    "finance:payout",
+    "finance:refund",
+    "marketing:view",
+    "marketing:edit",
+    "coupon:manage",
+    "community:view",
+    "community:moderate",
+    "settings:manage"
+  ];
+
+exports.getAllPermissions = catchAsync(async (req,res,next)=>{
+    res.status(200).json({
+        success: true,
+        data: ALL_PERMISSIONS
+    });
+})

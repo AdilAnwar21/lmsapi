@@ -25,19 +25,9 @@ app.use('/api', globalLimiter);
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const adminCategoryRoutes = require('./routes/admin.category.routes');
+const adminCourseRoutes = require('./routes/admin.course.routes');
 //setup for production
 
-const https = require('https');
-
-const url = 'https://mellou-billing.onrender.com/api/health';
-
-setInterval(() => {
-    https.get(url, (res) => {
-        console.log(`Ping sent to ${url}. Status: ${res.statusCode}`);
-    }).on('error', (e) => {
-        console.error(`Ping failed: ${e.message}`);
-    });
-}, 14 * 60 * 1000);
 
 //--------------------------------------------------
 
@@ -51,6 +41,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/categories', adminCategoryRoutes);
+app.use('/api/admin/courses', adminCourseRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
