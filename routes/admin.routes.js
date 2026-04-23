@@ -43,6 +43,18 @@ router.get(
 router.get('/users/me', verifyToken, adminAuthController.getMe);
 
 
+// Get a single user by ID
+router.get('/users/:id', verifyToken, checkPermission('user:view'), adminUserController.getUserById);
+
+// Update a user (Requires 'team:edit' permission)
+router.put('/users/:id', verifyToken, checkPermission('team:edit'), adminUserController.updateTeamMember);
+
+// Delete a user (Requires 'team:edit' or a specific 'team:delete' permission)
+router.delete('/users/:id', verifyToken, checkPermission('team:edit'), adminUserController.deleteTeamMember);
+
+
+
+
 router.get('/permissions',verifyToken,adminUserController.getAllPermissions)
 
 router.post(

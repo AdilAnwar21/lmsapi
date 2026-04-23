@@ -36,6 +36,8 @@ exports.login = catchAsync(async (req, res, next) => {
         // 2. Save to Redis (10 min expiry)
         await redisClient.setEx(`otp:${email}`, 600, otp);
 
+        console.log(otp,'otp')
+
         // 3. Send Email
         await sendEmail({
             email: user.email,
@@ -68,7 +70,7 @@ exports.login = catchAsync(async (req, res, next) => {
     // If 2FA is enabled...
     if (user.is_two_factor_enabled) {
         const tempToken = jwt.sign(
-            { id: user._id, role: user.role, isTemp: true },
+            { id: user._id, role: user.role, isTemp: true,permissions:user.permissions },
             process.env.JWT_SECRET,
             { expiresIn: '5m' }
         );
@@ -82,7 +84,7 @@ exports.login = catchAsync(async (req, res, next) => {
     }
 
     // Standard 7-day token issuance
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: user.role ,permissions:user.permissions}, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     res.status(200).json({
         success: true,

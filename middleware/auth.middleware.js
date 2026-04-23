@@ -29,7 +29,10 @@ exports.verifyToken = async (req, res, next) => { // <-- Note the 'async'
         
         // Attach the user data AND the raw token to the request
         req.user = decoded;
-        req.token = token; // We save this so the logout API can grab it easily!
+        req.token = token; // We save this so the logout API can grab it easily!'
+
+        
+        
         next();
     } catch (error) {
         return next(error);

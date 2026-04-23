@@ -161,3 +161,86 @@ exports.getAllPermissions = catchAsync(async (req,res,next)=>{
         data: ALL_PERMISSIONS
     });
 })
+
+
+
+// Get Single Team Member by ID (For Edit Mode)
+exports.getUserById = catchAsync(async (req, res, next) => {
+    // SECURITY: Ensure the requested ID actually belongs to an admin or staff member.
+    const user = await User.findOne({
+        _id: req.params.id,
+        role: { $in: ['admin', 'staff'] }
+    }).select('-password -two_factor_secret');
+
+    if (!user) {
+        return next(new AppError('No team member found with that ID.', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: user
+    });
+});
+
+// Update Team Member
+exports.updateTeamMember = catchAsync(async (req, res, next) => {
+    const { name, phone, role, permissions, is_blocked } = req.body;
+    const currentUserRole = req.user.role; 
+
+    // Security: Only an Admin can promote someone to Admin
+    if (role === 'admin' && currentUserRole !== 'admin') {
+        return next(new AppError('SECURITY ALERT: Only Admins can assign the Admin role.', 403));
+    }
+
+    // Prepare the update payload
+    const updateData = {
+        name,
+        phone,
+        role,
+        permissions: role === 'admin' ? [] : (permissions || []),
+        is_blocked
+    };
+
+    // SECURITY: findOneAndUpdate ensures we only update if the target is already staff/admin.
+    // This prevents an admin from accidentally (or maliciously) turning a student into a staff member via this endpoint.
+    const updatedUser = await User.findOneAndUpdate(
+        { _id: req.params.id, role: { $in: ['admin', 'staff'] } },
+        updateData, 
+        { new: true, runValidators: true }
+    ).select('-password -two_factor_secret');
+
+    if (!updatedUser) {
+        return next(new AppError('No team member found with that ID to update.', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'Team member updated successfully.',
+        data: updatedUser
+    });
+});
+
+// Delete Team Member
+exports.deleteTeamMember = catchAsync(async (req, res, next) => {
+    // Security: Prevent an admin from deleting themselves
+    if (req.user.id === req.params.id) {
+        return next(new AppError('You cannot delete your own account.', 403));
+    }
+
+    // SECURITY: findOneAndDelete ensures they can only delete admins or staff.
+    // If they pass a Student ID here, it will return 404.
+    const user = await User.findOneAndDelete({
+        _id: req.params.id,
+        role: { $in: ['admin', 'staff'] }
+    });
+
+    if (!user) {
+        return next(new AppError('No team member found with that ID.', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'Team member has been successfully removed.',
+        data: null
+    });
+});
