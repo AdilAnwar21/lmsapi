@@ -1,7 +1,12 @@
 const AppError = require('../utils/AppError');
 
 const errorHandler = (err, req, res, next) => {
+
+    console.log("💥 CRASH LOCATION:", err.stack);
+    
     err.statusCode = err.statusCode || 500;
+
+    
     
     // 1. CATCH EXPRESS BODY-PARSER ERRORS (The exact error you just got)
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {

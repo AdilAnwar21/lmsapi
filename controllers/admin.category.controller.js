@@ -5,6 +5,7 @@ const { decodeQuery } = require('../utils/encoder');
 
 // 1. Create Category
 exports.createCategory = catchAsync(async (req, res, next) => {
+    console.log("Is NEXT a function here?", typeof next);
     const { name, description } = req.body;
 
     if (!name) {

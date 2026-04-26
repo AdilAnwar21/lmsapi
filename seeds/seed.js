@@ -13,7 +13,7 @@ const seedAdmin = async () => {
             process.exit();
         }
 
-        const hashedPassword = await bcrypt.hash("Admin@123", 10); // Change this immediately after login!
+        const hashedPassword = await bcrypt.hash("Admin@123", 10);
         
         const admin = new User({
             name: "Super Admin",

@@ -26,6 +26,8 @@ const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const adminCategoryRoutes = require('./routes/admin.category.routes');
 const adminCourseRoutes = require('./routes/admin.course.routes');
+const adminkycRoutes = require('./routes/admin.kyc.routes');
+
 //setup for production
 
 
@@ -42,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/categories', adminCategoryRoutes);
 app.use('/api/admin/courses', adminCourseRoutes);
+app.use('/api/admin/kyc',adminkycRoutes );
 
 // Routes Placeholder
 app.get('/', (req, res) => {
