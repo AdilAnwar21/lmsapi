@@ -18,6 +18,10 @@ const onboardingFieldSchema = new mongoose.Schema({
         type: Boolean, 
         default: true 
     },
+    description: { 
+        type: String, 
+        default: '' // The small info text shown to students
+    },
     order_index: { 
         type: Number, 
         required: true // Determines the sequence the fields appear on the screen

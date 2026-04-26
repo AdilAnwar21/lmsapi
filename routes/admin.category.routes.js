@@ -13,11 +13,13 @@ router.post('/', checkPermission('course:create'), categoryController.createCate
 // Get All Categories (Requires course:view permission)
 router.get('/', checkPermission('course:view'), categoryController.getAllCategories);
 
-
-
+// Filter Categories 
+// ⚠️ MUST BE PLACED BEFORE /:id 
 router.get('/filter', checkPermission('course:view'), categoryController.getAllCategoriesFilter);
 
-
+// Get Category by ID 
+// ⚠️ MUST BE PLACED AFTER STATIC ROUTES
+router.get('/:id', checkPermission('courses:manage'), categoryController.getCategoryById);
 
 // Update Category (Requires course:edit permission)
 router.put('/:id', checkPermission('course:edit'), categoryController.updateCategory);

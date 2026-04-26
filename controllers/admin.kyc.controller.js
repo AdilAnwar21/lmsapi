@@ -43,6 +43,19 @@ exports.getAllFields = catchAsync(async (req, res, next) => {
     });
 });
 
+exports.getKycFieldById = catchAsync(async (req,res,next) => {
+    const field = await OnboardingField.findById(req.params.id);
+
+    if (!field) {
+        return next(new AppError('Field not found.', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: field
+    });
+})
+
 // 3. Update a Field (Or toggle active/inactive)
 exports.updateField = catchAsync(async (req, res, next) => {
     const field = await OnboardingField.findByIdAndUpdate(
@@ -92,4 +105,5 @@ exports.reviewStudentKyc = catchAsync(async (req, res, next) => {
         data: kycRecord
     });
 });
+
 

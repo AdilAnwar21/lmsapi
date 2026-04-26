@@ -33,6 +33,21 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
     });
 });
 
+
+// Get a single Category by ID
+exports.getCategoryById = catchAsync(async (req, res, next) => {
+    const category = await Category.findById(req.params.id);
+
+    if (!category) {
+        return next(new AppError('Category not found.', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        data: category
+    });
+});
+
 // 3. Update Category
 exports.updateCategory = catchAsync(async (req, res, next) => {
     const { name, description, is_active } = req.body;

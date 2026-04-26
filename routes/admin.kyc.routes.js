@@ -10,6 +10,7 @@ router.use(verifyToken);
 router.post('/kyc-fields', checkPermission('settings:manage'), kycController.createField);
 router.get('/kyc-fields', checkPermission('settings:manage'), kycController.getAllFields);
 router.put('/kyc-fields/:id', checkPermission('settings:manage'), kycController.updateField);
+router.get('/kyc-fields/:id', checkPermission('settings:manage'), kycController.getKycFieldById);
 
 // KYC Review (Requires user management permission)
 router.put('/kyc-review/:kycId', checkPermission('user:edit'), kycController.reviewStudentKyc);
