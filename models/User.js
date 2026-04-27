@@ -22,6 +22,31 @@ const userSchema = new mongoose.Schema({
     default: 'student' 
   },
   permissions: [{ type: String }],
+
+  influencer_profile: {
+    referral_code: {
+      type: String,
+      unique: true,
+      sparse: true, 
+      uppercase: true,
+      trim: true
+    },
+    discount_percentage: {
+        type: Number,
+        min: 0,
+        max: 100
+    },
+    commission_percentage: {
+        type: Number,
+        min: 0,
+        max: 100
+    },
+    metrics: {
+        total_referrals: { type: Number, default: 0 },
+        total_earnings: { type: Number, default: 0 },
+        pending_payout: { type: Number, default: 0 }
+    }
+  },
   
   // Security, Preferences & 2FA
   current_refresh_token: { type: String, default: null },
