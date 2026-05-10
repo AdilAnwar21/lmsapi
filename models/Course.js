@@ -5,7 +5,29 @@ const courseSchema = new mongoose.Schema({
   category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   title: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
-  price: { type: Number, required: true, min: 0 },
+  pricing: {
+    is_free: { 
+        type: Boolean, 
+        default: false 
+    },
+    regular_price: { 
+        type: Number, 
+        required: function() { return !this.pricing.is_free; }, // Required if not free
+        min: 0 
+    },
+    discounted_price: { 
+        type: Number,
+        min: 0,
+        validate: {
+            // Backend validation: Discounted price MUST be less than regular price
+            validator: function(val) {
+                if (!val) return true; // It's okay if it's empty
+                return val < this.pricing.regular_price;
+            },
+            message: 'Discounted price must be lower than the regular price.'
+        }
+    }
+  },
   validity_days: { type: Number, required: true }, // e.g., 365
   
   // Settings
