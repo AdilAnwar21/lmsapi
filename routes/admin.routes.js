@@ -22,6 +22,7 @@ router.post('/auth/complete-setup', authLimiter, adminAuthController.completeSet
 // Protected Admin Routes (Requires standard token)
 router.post('/auth/2fa/setup', verifyToken, adminAuthController.setup2FA);
 router.post('/auth/2fa/verify', verifyToken, adminAuthController.verify2FASetup);
+router.post('/auth/2fa/disable', verifyToken, adminAuthController.disable2FA);
 
 
 

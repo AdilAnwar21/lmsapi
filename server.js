@@ -36,6 +36,7 @@ const adminkycRoutes = require('./routes/admin.kyc.routes');
 const adminInfluencerROutes = require('./routes/admin.influencer.routes');
 const adminAssessmentRoutes = require('./routes/admin.assessment.routes');
 const documentRoutes = require('./routes/documentRoutes');
+const adminDashboardRoutes = require('./routes/admin.dashboard.routes');
 
 //setup for production
 
@@ -51,6 +52,7 @@ mongoose.connect(process.env.MONGODB_URI)
 //Routes setup
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
 app.use('/api/admin/categories', adminCategoryRoutes);
 app.use('/api/admin/courses', adminCourseRoutes);
 app.use('/api/admin/kyc',adminkycRoutes );

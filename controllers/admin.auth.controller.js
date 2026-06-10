@@ -177,7 +177,7 @@ exports.setup2FA = catchAsync(async (req, res, next) => {
 
 // 3. Verify & Enable 2FA (First time scan)
 exports.verify2FASetup = catchAsync(async (req, res, next) => {
-    const { code } = req.body; 
+    const { code } = req.body;
 
     if (!code) {
         return next(new AppError('Please provide the 6-digit 2FA code.', 400));
@@ -185,22 +185,40 @@ exports.verify2FASetup = catchAsync(async (req, res, next) => {
 
     const user = await User.findById(req.user.id);
 
-    const isValid = authenticator.verify({ token: code, secret: user.two_factor_secret });
-
-    if (!isValid) {
-        return next(new AppError('Invalid 2FA code. Please try again.', 400));
+    if (user.is_two_factor_enabled) {
+        return next(new AppError('2FA is already enabled.', 400));
     }
 
-    if(user.is_two_factor_enabled) {
-        return next(new AppError('2FA is already enabled.', 400));
+    const isVerified = authenticator.verify({
+        token: code,
+        secret: user.two_factor_secret
+    });
+
+    if (!isVerified) {
+        return next(new AppError('Invalid 2FA code. Please try again.', 400));
     }
 
     user.is_two_factor_enabled = true;
     await user.save();
+
     return res.status(200).json({ success: true, message: '2FA successfully enabled!' });
 });
 
-// 4. Phase 2 Login (Submitting the code to get the real JWT)
+exports.disable2FA = catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    
+    if (!user.is_two_factor_enabled) {
+        return next(new AppError('2FA is not enabled on this account.', 400));
+    }
+
+    user.is_two_factor_enabled = false;
+    user.two_factor_secret = null;
+    await user.save();
+
+    return res.status(200).json({ success: true, message: '2FA has been disabled.' });
+});
+
+// ==========================================4. Phase 2 Login (Submitting the code to get the real JWT)
 exports.loginWith2FA = catchAsync(async (req, res, next) => {
     const { tempToken, code } = req.body;
 
