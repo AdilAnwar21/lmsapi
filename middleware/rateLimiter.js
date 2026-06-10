@@ -5,7 +5,7 @@ const AppError = require('../utils/AppError');
 // Protects against general DDoS attacks (e.g., 100 requests per 15 mins)
 exports.globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per `window`
+    max: 1000, // Limit each IP to 1000 requests per `window`
     handler: (req, res, next, options) => {
         next(new AppError('Too many requests from this IP, please try again in 15 minutes.', 429));
     }
