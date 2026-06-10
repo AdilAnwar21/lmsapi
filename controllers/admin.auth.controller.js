@@ -118,6 +118,35 @@ exports.getMe = catchAsync(async (req, res, next) => {
     });
 });
 
+// Update Current Logged-in User Profile
+exports.updateMe = catchAsync(async (req, res, next) => {
+    // Extract updateable fields from request body
+    const { display_name, avatar_doc_id } = req.body;
+    
+    const updateFields = {};
+    if (display_name !== undefined) updateFields.display_name = display_name;
+    if (avatar_doc_id !== undefined) updateFields.avatar_doc_id = avatar_doc_id;
+
+    // We can also allow them to update their 'name' if desired, but 
+    // since the frontend passes display_name, we use that.
+
+    const user = await User.findByIdAndUpdate(
+        req.user.id,
+        updateFields,
+        { new: true, runValidators: true }
+    ).select('-password -two_factor_secret');
+
+    if (!user) {
+        return next(new AppError('User not found. Please log in again.', 404));
+    }
+
+    res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully.',
+        data: user
+    });
+});
+
 // 2. Setup 2FA (Generates the QR Code)
 exports.setup2FA = catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id);

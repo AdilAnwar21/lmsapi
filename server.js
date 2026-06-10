@@ -1,3 +1,9 @@
+// Polyfill global crypto for AWS SDK v3
+const { webcrypto } = require('crypto');
+if (typeof crypto === 'undefined') {
+  global.crypto = webcrypto;
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -29,6 +35,7 @@ const adminCourseRoutes = require('./routes/admin.course.routes');
 const adminkycRoutes = require('./routes/admin.kyc.routes');
 const adminInfluencerROutes = require('./routes/admin.influencer.routes');
 const adminAssessmentRoutes = require('./routes/admin.assessment.routes');
+const documentRoutes = require('./routes/documentRoutes');
 
 //setup for production
 
@@ -49,7 +56,7 @@ app.use('/api/admin/courses', adminCourseRoutes);
 app.use('/api/admin/kyc',adminkycRoutes );
 app.use('/api/admin/influencer',adminInfluencerROutes );
 app.use('/api/admin/assessments',adminAssessmentRoutes );
-
+app.use('/api/admin/documents', documentRoutes);
 // Routes Placeholder
 app.get('/', (req, res) => {
     res.send('Mellou Billing API is running');

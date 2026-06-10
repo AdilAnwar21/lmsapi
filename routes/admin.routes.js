@@ -41,6 +41,7 @@ router.get(
 );
 
 router.get('/users/me', verifyToken, adminAuthController.getMe);
+router.patch('/users/me', verifyToken, adminAuthController.updateMe);
 
 
 // Get a single user by ID
