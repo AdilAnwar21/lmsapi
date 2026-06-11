@@ -53,11 +53,10 @@ const courseSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
-courseSchema.pre('save', function(next) {
-  if (this.isModified('title')) {
+courseSchema.pre('save', function() {
+  if (this.isModified('title') && this.title) {
       this.slug = slugify(this.title, { lower: true, strict: true });
   }
-  next();
 });
 
 module.exports = mongoose.model('Course', courseSchema);

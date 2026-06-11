@@ -21,4 +21,13 @@ router.get('/filter', checkPermission('course:view'), courseController.getAllCou
 // Create Course (Requires course:create)
 router.post('/', checkPermission('course:create'), courseController.createCourse);
 
+// Update Course (Requires course:edit)
+router.patch('/:id', checkPermission('course:edit'), courseController.updateCourse);
+
+// Toggle Course Status (Requires course:edit)
+router.patch('/:id/status', checkPermission('course:edit'), courseController.toggleCourseStatus);
+
+// Get Course Tree (Requires course:view)
+router.get('/:id/tree', checkPermission('course:view'), courseController.getCourseTree);
+
 module.exports = router;

@@ -40,6 +40,8 @@ const adminInfluencerROutes = require('./routes/admin.influencer.routes');
 const adminAssessmentRoutes = require('./routes/admin.assessment.routes');
 const documentRoutes = require('./routes/documentRoutes');
 const adminDashboardRoutes = require('./routes/admin.dashboard.routes');
+const adminModuleRoutes = require('./routes/admin.module.routes');
+const adminUnitRoutes = require('./routes/admin.unit.routes');
 
 //setup for production
 
@@ -62,6 +64,8 @@ app.use('/api/admin/kyc',adminkycRoutes );
 app.use('/api/admin/influencer',adminInfluencerROutes );
 app.use('/api/admin/assessments',adminAssessmentRoutes );
 app.use('/api/admin/documents', documentRoutes);
+app.use('/api/admin/modules', adminModuleRoutes);
+app.use('/api/admin/units', adminUnitRoutes);
 // Routes Placeholder
 app.get('/', (req, res) => {
     res.send('Mellou Billing API is running');
